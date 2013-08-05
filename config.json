@@ -1,0 +1,15 @@
+{
+    "payloadPath": "/payloads",
+    "bootCounterFile": "bootcounter.log",
+    "defaultServer":{
+        "url": "10.142.0.2",
+        "port": 81,
+        "next":"/next",
+        "config": "config.json"
+    },
+    "servers":[
+        {
+            "url": "127.0.0.1"
+        }
+    ]
+}
