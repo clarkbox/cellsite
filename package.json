@@ -8,6 +8,7 @@
     "dependencies": {
         "underscore": "*",
         "simple-log": "*",
-        "async": "*"
+        "async": "*",
+        "request":"*"
     }
 }

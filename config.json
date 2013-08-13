@@ -1,5 +1,5 @@
 {
-    "payloadPath": "/payloads",
+    "homeFilePath":"/srv/home",
     "bootCounterFile": "bootcounter.log",
     "defaultServer":{
         "url": "10.142.0.2",
