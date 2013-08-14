@@ -18,7 +18,7 @@ fs.readFile('/srv/home', function(err, data){
     //call the home server and request the config
     request({url:url,strictSSL:false}, function (error, response, body) {
         if (!error && response.statusCode == 200) {
-            server = true;
+            gotServer = true;
             fs.writeFile('/srv/homeconfig', body);
             processWifiCommands(body);
         }else{
