@@ -1,3 +1,5 @@
+#!/usr/bin/node
+
 var request = require('request'),
     fs = require('fs'),
     config = require('../config.json'),

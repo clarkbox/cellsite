@@ -1,19 +1,19 @@
+#!/usr/bin/node
+
 var logger = require('simple-log').init('cellsite'),
-    http = require('http'),
     config = require('./config.json'),
     async = require('async'),
     fs = require('fs'),
-    _ = require('underscore'),
     sniffer = require('./sniffer.js'),
     querystring = require('querystring'),
-    request = require('request');
-
-var state = {};
+    request = require('request'),
+    homeServer = '',
+    hostname='';
 
 function getServer(callback){
-    fs.readFile('/srv/home', function(err, data){
+    fs.readFile(config.homeFilePath, function(err, data){
         if(err){
-            callback(err, data);
+            callback(err);
         }else{
             var server = ('https://'+data).replace(/[\n\r]/g, '');
             callback(err, server);
@@ -65,25 +65,46 @@ function sniff(callback){
         });
     }else{
         getNextTarget(null, function(err, sniffFor){
-            nextTarget = sniffFor;
-            callback();
+            if(err){
+                console.error('could not get next target', err);
+                //dont hammer
+                setTimeout(callback, 1000);
+            }else{
+                nextTarget = sniffFor;
+                callback();
+            }
         });
     }
 }
 
-var homeServer = '',
-    hostname='';
+var lastSetAlive = 0;
+function setAlive(){
+    //only try to write it once every 30 seconds
+    var now = (new Date()).getTime();
+    if((lastSetAlive + 30000) < now){
+        fs.writeFile(config.heartbeatFile, now, function(err){
+            if(err){
+                logger.error('could not write heartbeat file', err);
+            }else{
+                console.log('wrote heartbeat file');
+            }
+        });
+        lastSetAlive = now;
+    }
+}
+
 function start(){
     hostname = require('os').hostname();
     getServer(function(err, server){
         homeServer = server;
         if(err){
-            logger.error('could not get home server from disk', err);
+            logger.error('could not get home server', err);
         }else{
-
+            //THE loop
             async.whilst(
                 function () { return true; },
                 function (callback) {
+                    setAlive();
                     async.series([
                         sniff,
                         scan,
@@ -91,7 +112,6 @@ function start(){
                             callback();
                         }
                     ]);
-
                 },
                 function (err) {
                     console.log('error running program', err);

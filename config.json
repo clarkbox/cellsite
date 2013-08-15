@@ -1,15 +1,7 @@
 {
     "homeFilePath":"/srv/home",
-    "bootCounterFile": "bootcounter.log",
-    "defaultServer":{
-        "url": "10.142.0.2",
-        "port": 81,
-        "next":"/next",
-        "config": "config.json"
-    },
-    "servers":[
-        {
-            "url": "127.0.0.1"
-        }
-    ]
+    "heartbeatFile":"/tmp/heartbeat",
+    "watchdogDelay":2,
+    "watchdogTimeout":10,
+    "watchdogRetrys":10
 }

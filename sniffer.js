@@ -3,7 +3,7 @@ var logger = require('simple-log').init('cellsite'),
 
 module.exports = {
     sniff: function(target, callback){
-        var command = './sniffScript.sh '+ target;
+        var command = './scripts/sniffScript.sh '+ target;
         exec(command, function(err, stdout, stderr){
             if(err){
                 callback(err);
