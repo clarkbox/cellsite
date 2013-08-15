@@ -10,6 +10,8 @@ var logger = require('simple-log').init('cellsite'),
     homeServer = '',
     hostname='';
 
+process.title = "cellsite";
+
 function getServer(callback){
     fs.readFile(config.homeFilePath, function(err, data){
         if(err){
