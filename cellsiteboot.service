@@ -1,0 +1,11 @@
+[Unit]
+Description=boot up script for cellsite
+After=syslog.target network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/srv/cellsite/scripts/atboot.sh
+
+[Install]
+WantedBy=multi-user.target

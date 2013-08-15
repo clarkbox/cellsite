@@ -1,0 +1,10 @@
+[Unit]
+Description=main application for cellsite
+After=syslog.target network.target
+
+[Service]
+Type=simple
+ExecStart=/srv/cellsite/app.js
+
+[Install]
+WantedBy=multi-user.target
