@@ -38,23 +38,30 @@ fs.readFile('/srv/home', function(err, data){
 });
 
 function processWifiCommands(configStr){
+    /*
     //example configStr:
-    // configStr = '{"wifissid":"blue","wifipass":"changeme", "wifiscan":false, "wifipurgeconnections":false, "wifistopafteraction":false, "wififorceconnection": false}';
+    // configStr = '{
+    // "wifissid":"blue",
+    // "wifipass":"changeme",
+    // "wifiscan":false, //run and send report a wifi scan
+    // "wifipurgeconnections":false, //remove previously configured connections
+    // "wifistopafteraction":false, //stop processing commands after running scan or purge. dont attempt connection. TODO rename this attribute
+    // "wififorceconnection": false //connect even if we already have an established connection
+    }';
+    */
     console.log('info','config:', configStr);
     var c = JSON.parse(configStr);
 
     if(c.wifipurgeconnections){
         deleteAllConnections();
-        if(c.wifistopafteraction){
-            return;
-        }
     }
 
     if(c.wifiscan){
         wifiScan();
-        if(c.wifistopafteraction){
-            return;
-        }
+    }
+
+    if(c.wifistopafteraction){
+        return;
     }
 
     getConections(function(connections){

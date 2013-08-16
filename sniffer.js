@@ -1,9 +1,9 @@
-var logger = require('simple-log').init('cellsite'),
-    exec = require('child_process').exec;
+var exec = require('child_process').exec
+    path = require('path');
 
 module.exports = {
     sniff: function(target, callback){
-        var command = './scripts/sniffScript.sh '+ target;
+        var command = path.resolve(__dirname, 'scripts/sniffScript.sh ')+ target;
         exec(command, function(err, stdout, stderr){
             if(err){
                 callback(err);
