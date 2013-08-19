@@ -15,27 +15,46 @@ fs.readFile('/srv/home', function(err, data){
     }
 
     server = ('https://'+data).replace(/[\n\r]/g, '');
-    var url = (server+'/getconfig');
+    getConfig(function(err, body){
+        if(err){
+            console.error(err);
+            return;
+        }
+        gotServer = true;
+        fs.writeFile('/srv/homeconfig', body);
+        processWifiCommands(body);
+    });
 
+});
+
+function getConfig(callback){
+    var url = (server+'/getconfig');
     //call the home server and request the config
-    request({url:url,strictSSL:false}, function (error, response, body) {
+    request({
+        url:url,
+        strictSSL:false,
+        auth: {
+            'user': config.homeuser,
+            'pass': config.homepass,
+            'sendImmediately': true
+        }
+    }, function (error, response, body) {
         if (!error && response.statusCode == 200) {
-            gotServer = true;
-            fs.writeFile('/srv/homeconfig', body);
-            processWifiCommands(body);
+            setHeartbeat(1);
+            callback(null, body);
         }else{
+            setHeartbeat(0);
             //did not get config from home server. attempt to use backup stored on /srv/homeconfig
             console.log('error: could not get config from home. looking for /srv/homeconfig', error);
             fs.readFile('/srv/homeconfig', function(err, data){
                 if(!err){
-                    processWifiCommands(data+'');
+                    callback(data+'');
                 }
-                console.log('error','could not run! config not found on home server or in /srv/homeconfig');
+                callback('error could not run! config not found on home server or in /srv/homeconfig');
             });
         }
     });
-
-});
+}
 
 function processWifiCommands(configStr){
     /*
@@ -161,5 +180,13 @@ function serverLog(message){
         return;
     }
     var url = server+'/track?source=setwifi&message='+message;
-    request({url:url,strictSSL:false});
+    request({url:url,strictSSL:false,method:'post'});
+}
+
+function setHeartbeat(value){
+    var command = 'echo none >/sys/class/leds/led0/trigger';
+    if(value == 1){
+        command = 'echo heartbeat >/sys/class/leds/led0/trigger';
+    }
+    exec(command, function(err, stdout, stderr){});
 }

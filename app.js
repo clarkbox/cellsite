@@ -34,7 +34,12 @@ function getNextTarget(results, callback){
         url: url,
         method:'post',
         body: querystring.stringify(results, '&', '='),
-        strictSSL:false
+        strictSSL:false,
+        auth: {
+            'user': config.homeuser,
+            'pass': config.homepass,
+            'sendImmediately': true
+        }
     }, function(err, response, body){
         if(err || response.statusCode !== 200){
             logger.error('could not get next target', err);
