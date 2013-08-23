@@ -7,8 +7,8 @@
     },
     "dependencies": {
         "underscore": "*",
-        "simple-log": "*",
         "async": "*",
-        "request":"*"
+        "request":"*",
+        "winston":"*"
     }
 }

@@ -1,56 +1,55 @@
 #!/usr/bin/node
-
 var request = require('request'),
     fs = require('fs'),
     config = require('../config.json'),
     exec = require('child_process').exec,
-    gotServer = false,
+    util = require('../util.js'),
     server = '';
 
-//find the home server host in file system
-fs.readFile('/srv/home', function(err, data){
+server = 'https://' + util.getServer();
+
+getConfig(function(err, body){
     if(err){
-        console.log('error: could not read home file in '+config.homeFilePath, err);
+        console.error(err);
         return;
     }
-
-    server = ('https://'+data).replace(/[\n\r]/g, '');
-    getConfig(function(err, body){
-        if(err){
-            console.error(err);
-            return;
-        }
-        gotServer = true;
-        fs.writeFile('/srv/homeconfig', body);
-        processWifiCommands(body);
-    });
-
+    fs.writeFile('/srv/homeconfig', body);
+    processWifiCommands(body);
 });
 
 function getConfig(callback){
-    var url = (server+'/getconfig');
+    var url = server+'/getconfig';
+    console.log(url)
+    util.setHeartbeat(1);
     //call the home server and request the config
     request({
-        url:url,
-        strictSSL:false,
+        url: url,
+        strictSSL: false,
         auth: {
             'user': config.homeuser,
-            'pass': config.homepass,
-            'sendImmediately': true
+            'pass': config.homepasss
         }
     }, function (error, response, body) {
         if (!error && response.statusCode == 200) {
-            setHeartbeat(1);
             callback(null, body);
         }else{
-            setHeartbeat(0);
+            util.setHeartbeat(0);
+
+            var status = '';
+            if(response && response.statusCode){
+                status += response.statusCode;
+            }else{
+                status += '-1';
+            }
+
             //did not get config from home server. attempt to use backup stored on /srv/homeconfig
-            console.log('error: could not get config from home. looking for /srv/homeconfig', error);
+            console.log('error: could not get config from home server.', error, status);
+
             fs.readFile('/srv/homeconfig', function(err, data){
                 if(!err){
                     callback(data+'');
                 }
-                callback('error could not run! config not found on home server or in /srv/homeconfig');
+                callback('error could not run! config not found on home server or in /srv/homeconfig', err);
             });
         }
     });
@@ -148,9 +147,9 @@ function deleteConnection(uuid){
 function wifiScan(){
     exec("nmcli -t -f ssid,bssid,mode,freq,rate,signal,security,active dev wifi list", function(err, stdout, stderr){
         if(err){
-            serverLog('wifiscan: could not scan wifi', err);
+            util.log('error', 'wifiscan: could not scan wifi', err);
         }else{
-            serverLog('wifiscan: '+stdout);
+            util.log('info', 'wifiscan: '+stdout);
         }
     });
 }
@@ -173,20 +172,4 @@ function connect(ssid, pass, callback){
             callback();
         }
     });
-}
-
-function serverLog(message){
-    if(!gotServer){
-        return;
-    }
-    var url = server+'/track?source=setwifi&message='+message;
-    request({url:url,strictSSL:false,method:'post'});
-}
-
-function setHeartbeat(value){
-    var command = 'echo none >/sys/class/leds/led0/trigger';
-    if(value == 1){
-        command = 'echo heartbeat >/sys/class/leds/led0/trigger';
-    }
-    exec(command, function(err, stdout, stderr){});
 }

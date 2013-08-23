@@ -1,27 +1,16 @@
 #!/usr/bin/node
 
-var logger = require('simple-log').init('cellsite'),
-    config = require('./config.json'),
+var config = require('./config.json'),
     async = require('async'),
     fs = require('fs'),
     sniffer = require('./sniffer.js'),
     querystring = require('querystring'),
     request = require('request'),
+    util = require('./util.js'),
     homeServer = '',
     hostname='';
 
 process.title = "cellsite";
-
-function getServer(callback){
-    fs.readFile(config.homeFilePath, function(err, data){
-        if(err){
-            callback(err);
-        }else{
-            var server = ('https://'+data).replace(/[\n\r]/g, '');
-            callback(err, server);
-        }
-    });
-}
 
 function scan(callback){
     console.log('TODO implement "hcitool scan"');
@@ -29,7 +18,7 @@ function scan(callback){
 }
 
 function getNextTarget(results, callback){
-    var url = homeServer+'/next';
+    var url = homeServer+'/next' ;
     request({
         url: url,
         method:'post',
@@ -42,7 +31,7 @@ function getNextTarget(results, callback){
         }
     }, function(err, response, body){
         if(err || response.statusCode !== 200){
-            logger.error('could not get next target', err, 'response.statusCode: '+response.statusCode);
+            util.log('error', 'could not get next target', err);
             callback(err);
             return;
         }
@@ -58,7 +47,7 @@ function sniff(callback){
             sniffResult.target = nextTarget;
             sniffResult.host = hostname;
             if(error){
-                logger.error('error sniffing for target=', nextTarget, 'error=', error);
+                util.log('error', 'error sniffing for target=', nextTarget, 'error=', error);
                 sniffResult.found = false;
                 sniffResult.message = 'could not find target';
             }else{
@@ -91,9 +80,9 @@ function setAlive(){
     if((lastSetAlive + 30000) < now){
         fs.writeFile(config.heartbeatFile, now, function(err){
             if(err){
-                logger.error('could not write heartbeat file', err);
+                util.log('error', 'could not write heartbeat file', err);
             }else{
-                console.log('wrote heartbeat file');
+                util.log('info', 'wrote heartbeat file');
             }
         });
         lastSetAlive = now;
@@ -102,30 +91,26 @@ function setAlive(){
 
 function start(){
     hostname = require('os').hostname();
-    getServer(function(err, server){
-        homeServer = server;
-        if(err){
-            logger.error('could not get home server', err);
-        }else{
-            //THE loop
-            async.whilst(
-                function () { return true; },
-                function (callback) {
-                    setAlive();
-                    async.series([
-                        sniff,
-                        scan,
-                        function(){
-                            callback();
-                        }
-                    ]);
-                },
-                function (err) {
-                    console.log('error running program', err);
+    homeServer = 'https://'+util.getServer();
+    //THE loop
+    async.whilst(
+        function () { return true; },
+        function (callback) {
+
+            util.log('error','asd')
+            setAlive();
+            async.series([
+                sniff,
+                scan,
+                function(){
+                    callback();
                 }
-            );
+            ]);
+        },
+        function (err) {
+            util.log('error', 'error running program', err);
         }
-    });
+    );
 }
 
 start();
