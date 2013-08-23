@@ -42,7 +42,7 @@ function getNextTarget(results, callback){
         }
     }, function(err, response, body){
         if(err || response.statusCode !== 200){
-            logger.error('could not get next target', err);
+            logger.error('could not get next target', err, 'response.statusCode: '+response.statusCode);
             callback(err);
             return;
         }
